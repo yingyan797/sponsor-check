@@ -15,11 +15,19 @@
 </head>
 <body>
     <h2>Influencer content review system</h2>
-    Upload campaign activity history file to render: <input type="file" id="exf" oninput="process_file()"> <br>
+    Upload campaign activity history file to render: <input type="file" id="exf" oninput="process_file(false)"> <br>
+    <input type="checkbox" oninput="process_file(true)"> Display clickable URL <b id="url_on" style="display: none;"></b>
     <div id="fileContents">-----</div>
 </body>
 <script>
-    function process_file() {
+    function process_file(check_url) {
+        if (check_url) {
+            if (document.getElementById("url_on").style.display == "none") {
+                document.getElementById("url_on").style.display = "block";
+            } else {
+                document.getElementById("url_on").style.display = "none"
+            }
+        }
         var file = document.getElementById("exf").files[0];
         const avoid_columns = ["submitted", "approved"];
         function create_table(text) {
@@ -76,21 +84,29 @@
                     let k = 0;
                     if (col == "message" && entry.includes(":")) {
                         k = entry.indexOf(':');
-                        content = "<span style='color: cornflowerblue'>"+entry.substring(0, k)+"</span>";
+                        let color = "green";
+                        if (entry.substring(0,k).toLowerCase().indexOf("reject") >= 0) {
+                            color = "orange";
+                        }
+                        content = "<b style='color:"+color+"'>"+entry.substring(0, k)+"</b>";
                     }
-                    let n_urls = 0;
-                    while (k < entry.length) {
-                        if (entry.substring(k, k+7) == "http://" || entry.substring(k, k+8) == "https://") {
-                            n_urls++;
-                            let s = k;
-                            k += 7;
-                            while (k < entry.length && entry[k] != " ") {
+                    if (document.getElementById("url_on").style.display == "none") {
+                        content += entry.substring(k);
+                    } else {
+                        let n_urls = 0;
+                        while (k < entry.length) {
+                            if (entry.substring(k, k+7) == "http://" || entry.substring(k, k+8) == "https://") {
+                                n_urls++;
+                                let s = k;
+                                k += 7;
+                                while (k < entry.length && !" \n\t\r".includes(entry[k])) {
+                                    k++;
+                                }
+                                content += "<a href='"+entry.substring(s,k)+"'>[Reference URL "+n_urls+"]</a>"
+                            } else {
+                                content += entry[k];
                                 k++;
                             }
-                            content += "<a href='"+entry.substring(s,k)+"'>[Reference URL "+n_urls+"]</a>"
-                        } else {
-                            content += entry[k];
-                            k++;
                         }
                     }
                     res_html += "<td title='"+col_names[j]+"'>"+content+"</td>";
@@ -99,7 +115,6 @@
             })
             res_html += "</table>";
             return res_html;
-
         }
 
         if (file) {
