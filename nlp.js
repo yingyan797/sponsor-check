@@ -1,5 +1,5 @@
 // import { pipeline } from '@huggingface/transformers';
-// import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2"
+import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2"
 alert(1)
 try {
     const classifier = await pipeline('sentiment-analysis');

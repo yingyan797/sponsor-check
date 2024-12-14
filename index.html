@@ -4,24 +4,113 @@
         h2 {
             background-color: skyblue;
         }
+        th {
+            border: solid;
+            background-color: azure;
+        } td {
+            border: blueviolet solid;
+        }
     </style>
-    <script type="module">
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2';
-    </script>
-    <!-- <script src="./nlp.js"></script> -->
+    <!-- <script type="module" src="./nlp.js"></script> -->
 </head>
 <body>
-    <h2>Influencer content checking system</h2>
-    output: <textarea id="demo-out"></textarea>
+    <h2>Influencer content review system</h2>
+    Upload campaign activity history file to render: <input type="file" id="exf" oninput="process_file()"> <br>
+    <div id="fileContents">-----</div>
 </body>
 <script>
-    alert(1)
-    try {
-        const classifier = await pipeline('sentiment-analysis');
-        const output = await classifier('I love transformers!');
+    function process_file() {
+        var file = document.getElementById("exf").files[0];
+        const avoid_columns = ["submitted", "approved"];
+        function create_table(text) {
+            if (text[-1] != '\n') {
+                text += '\n';
+            }
+            const col_names = [];
+            const nums_avoid = []
+            let read_body = false;
+            let col_num = 0;
+            const rows = [];
+            let row = [];
+            let entry = "";
+            let paragraph = false;
+            for (const c of text) {
+                if (c == "\"") {
+                    paragraph = !paragraph;
+                    continue;
+                }
+                if (paragraph) {
+                    entry += c;
+                    continue;
+                }
+                if (c == ',' || c == '\n') {
+                    if (! read_body) {
+                        if (! avoid_columns.includes(entry))
+                            col_names.push(entry);
+                        else
+                            nums_avoid.push(col_num);
+                    } else if (! nums_avoid.includes(col_num)) {
+                        row.push(entry);
+                    }
+                    entry = "";
+                    if (c == '\n') {
+                        read_body = true;
+                        col_num = 0;
+                        rows.push(row);
+                        row = [];
+                    } else {
+                        col_num++;
+                    }
+                } else {
+                    entry += c;
+                }
+            }
+            let res_html = "<table><tr>";
+            col_names.forEach((n, i) => res_html += "<th>"+n+"</th>");
+            res_html += "</tr>\n";
+            rows.forEach((r, i) => {
+                res_html += "<tr>"
+                r.forEach((entry, j) => {
+                    let content = "";
+                    let col = col_names[j];
+                    let k = 0;
+                    if (col == "message" && entry.includes(":")) {
+                        k = entry.indexOf(':');
+                        content = "<span style='color: cornflowerblue'>"+entry.substring(0, k)+"</span>";
+                    }
+                    let n_urls = 0;
+                    while (k < entry.length) {
+                        if (entry.substring(k, k+7) == "http://" || entry.substring(k, k+8) == "https://") {
+                            n_urls++;
+                            let s = k;
+                            k += 7;
+                            while (k < entry.length && entry[k] != " ") {
+                                k++;
+                            }
+                            content += "<a href='"+entry.substring(s,k)+"'>[Reference URL "+n_urls+"]</a>"
+                        } else {
+                            content += entry[k];
+                            k++;
+                        }
+                    }
+                    res_html += "<td title='"+col_names[j]+"'>"+content+"</td>";
+                })
+                res_html += "</tr>\n"
+            })
+            res_html += "</table>";
+            return res_html;
 
-        console.log(output);
-    } catch (error) {
-        console.log(error)
+        }
+
+        if (file) {
+            var reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = function (evt) {
+                document.getElementById("fileContents").innerHTML = create_table(evt.target.result);
+            }
+            reader.onerror = function (evt) {
+                document.getElementById("fileContents").innerHTML = "error reading file";
+            }
+        }
     }
 </script>
