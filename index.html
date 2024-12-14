@@ -1,0 +1,27 @@
+<head>
+    <title>sponsor verification</title>
+    <style>
+        h2 {
+            background-color: skyblue;
+        }
+    </style>
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2';
+    </script>
+    <!-- <script src="./nlp.js"></script> -->
+</head>
+<body>
+    <h2>Influencer content checking system</h2>
+    output: <textarea id="demo-out"></textarea>
+</body>
+<script>
+    alert(1)
+    try {
+        const classifier = await pipeline('sentiment-analysis');
+        const output = await classifier('I love transformers!');
+
+        console.log(output);
+    } catch (error) {
+        console.log(error)
+    }
+</script>
