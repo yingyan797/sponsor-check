@@ -15,21 +15,23 @@
 </head>
 <body>
     <h2>Influencer content review system</h2>
-    Upload campaign activity history file to render: <input type="file" id="exf" oninput="process_file(false)"> <br>
-    <input type="checkbox" oninput="process_file(true)"> Display clickable URL <b id="url_on" style="display: none;"></b>
+    Upload campaign activity history file to render: <input type="file" id="exf" oninput="process_file({})"> <br>
+    Display clickable URL:<input type="checkbox" oninput="process_file({'url_switch': true})">; 
+    Find sender: <textarea id="sender" oninput="process_file({})" rows="1"></textarea>
+    <b id="url_on" style="display: none;"></b>
     <div id="fileContents">-----</div>
 </body>
 <script>
-    function process_file(check_url) {
-        if (check_url) {
+    function process_file(mode) {
+        var file = document.getElementById("exf").files[0];
+        const avoid_columns = ["submitted", "approved"];
+        if ("url_switch" in mode) {
             if (document.getElementById("url_on").style.display == "none") {
                 document.getElementById("url_on").style.display = "block";
             } else {
-                document.getElementById("url_on").style.display = "none"
+                document.getElementById("url_on").style.display = "none";
             }
         }
-        var file = document.getElementById("exf").files[0];
-        const avoid_columns = ["submitted", "approved"];
         function create_table(text) {
             if (text[-1] != '\n') {
                 text += '\n';
@@ -53,7 +55,7 @@
                 }
                 if (c == ',' || c == '\n') {
                     if (! read_body) {
-                        if (! avoid_columns.includes(entry))
+                        if (! avoid_columns.includes(entry)) 
                             col_names.push(entry);
                         else
                             nums_avoid.push(col_num);
@@ -64,7 +66,8 @@
                     if (c == '\n') {
                         read_body = true;
                         col_num = 0;
-                        rows.push(row);
+                        if (row.length > 0)
+                            rows.push(row);
                         row = [];
                     } else {
                         col_num++;
@@ -73,16 +76,19 @@
                     entry += c;
                 }
             }
+            const message_col = col_names.indexOf("message");
+            const sender_col = col_names.indexOf("sender");
             let res_html = "<table><tr>";
             col_names.forEach((n, i) => res_html += "<th>"+n+"</th>");
             res_html += "</tr>\n";
             rows.forEach((r, i) => {
-                res_html += "<tr>"
+                if (document.getElementById("sender").value != "" && r[sender_col].toLowerCase().indexOf(document.getElementById("sender").value.toLowerCase()) < 0)
+                    {return}
+                let row_html = "<tr>";
                 r.forEach((entry, j) => {
                     let content = "";
-                    let col = col_names[j];
                     let k = 0;
-                    if (col == "message" && entry.includes(":")) {
+                    if (j == message_col && entry.includes(":")) {
                         k = entry.indexOf(':');
                         let color = "green";
                         if (entry.substring(0,k).toLowerCase().indexOf("reject") >= 0) {
@@ -109,9 +115,9 @@
                             }
                         }
                     }
-                    res_html += "<td title='"+col_names[j]+"'>"+content+"</td>";
+                    row_html += "<td title='"+col_names[j]+"'>"+content+"</td>";
                 })
-                res_html += "</tr>\n"
+                res_html += row_html+"</tr>\n"
             })
             res_html += "</table>";
             return res_html;
