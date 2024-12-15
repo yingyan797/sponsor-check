@@ -12,39 +12,61 @@ async function step_selection(description, steps) {
     return parseInt(top_label.substring(0, i-1));
 }
 
-function content_review() {
+async function text_feedback(content, brief) {
+    const checker = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M');
+    // const feedback = await checker(
+    //     "Based on the given specifications document, provide some feedback for the submitted contents. specification document as follows: '"+brief+"'; submitted contents as follows: '"+content+"'",
+    //     {'max_new_tokens': 100}
+    // )
+    const feedback = await checker(
+        "Provide some reasons why Mongolia is colder than Japan",
+        {'max_new_tokens': 100}
+    )
+    return feedback[0]["generated_text"];
+}
+
+async function content_review() {
     var file = document.getElementById("media").files[0];
     let mtype = document.getElementById("mtype").value;
     if (file) {
         var reader = new FileReader();
-        let template = "";
-        
-        switch (mtype) {
-            case "text": {
-                reader.readAsText(file, "UTF-8");
-                template = ["<textarea rows='15' cols='70' readonly>", "</textarea>"];
-                break;
-            }
-            case "image": {
-                reader.readAsDataURL(file);
-                template = ["<img width='97%' src='", "'></img>"];
-                break;
-            }
-            case "video": {
-                break;
-            }
+        ["text", "image", "video"].forEach((m, i) => {document.getElementById("s_"+m).style.display = "none"});
+        document.getElementById("s_"+mtype).style.display = "block";
+        if (mtype == "text") {
+            reader.readAsText(file, "UTF-8");
+        } else {
+            reader.readAsDataURL(file);
         }
         reader.onload = function (evt) {
-            document.getElementById("preview").innerHTML = template[0]+evt.target.result+template[1];
+            switch (mtype) {
+                case "text": {
+                    document.getElementById("s_text").innerHTML = evt.target.result;
+                    break;
+                }
+                case "image": {
+                    document.getElementById("s_image").src = evt.target.result;
+                    break;
+                }
+                case "video": {
+                    document.getElementById("s_video_source").src = evt.target.result;
+                    document.getElementById("s_video").load();
+                    break;
+                }
+            }
         }
         reader.onerror = function (evt) {
-            document.getElementById("preview").innerHTML = "error reading file";
+            alert("error reading file");
         }
     }
-    parse_brief();
+    let brief = document.getElementById("brief").value;
+    if (brief == "") {
+        brief = await parse_brief();
+    }
+    const feedback = await text_feedback(document.getElementById("s_text").innerText, brief);
+    document.getElementById("ai_feedback").innerHTML = feedback;
 }
 
-function parse_brief() {
+async function parse_brief() {
     var file = document.getElementById("brief_doc").files[0];
     if (file) {
         var reader = new FileReader();
@@ -55,6 +77,7 @@ function parse_brief() {
         reader.onerror = function (evt) {
             document.getElementById("brief").innerHTML = "error reading reference brief";
         }
+        return document.getElementById("brief").innerHTML;
     }
     async function process_brief(brief) {
         const steps = [];
@@ -103,8 +126,7 @@ function parse_brief() {
 
         return brief.substring(body, i);
     }
-
-    // document.getElementById("criteria").src = link;
+    return "";
 }
 
 window.content_review = content_review;

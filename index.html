@@ -158,7 +158,7 @@
 
         <section id="page_1" class="page" hidden>
             <div class="row">
-                <div class="column" style="border: solid gray; background-color: lightgray;">
+                <div class="column" style="border: none; background-color: lightgray;">
                     <h2>Prepare Content</h2>
                     <form id="content-submission">
                         <label for="brand">Submit content to (brand name):</label>
@@ -179,29 +179,30 @@
 
                         <b>Upload brief/criteria document:</b>
                         <input type="file" id="brief_doc" accept="text/*">
-
-                        <button type="button" class="submit-button" onclick="content_review()">
-                            Continue to AI Review &raquo;
-                        </button>
                     </form>
                 </div>
 
                 <div class="column">
                     <h2>Content Preview</h2>
-                    <div id="preview" aria-live="polite"></div>
+                    <textarea id="s_text" style="display: none;" rows='15' cols='70' readonly></textarea>
+                    <img id="s_image" style="display: none;" width='97%'>
+                    <video id='s_video' width='97%' style="display: none;" controls> <source id='s_video_source'> Video preview not supported </video>
                 </div>
 
                 <div class="column">
                     <h2>Reference Criteria</h2>
-                    <textarea id="brief" readonly rows="15" cols="70" 
+                    <textarea id="brief" rows="15" cols="70" 
                         aria-label="Reference criteria section"></textarea>
-                    <i style="color: gray;">Here's the detected section of brief document related to submitter descriptions</i>
+                    <i style="color: gray;">
+                    Based on submitter descriptions, releted sections from the uploaded brief document will appear here. Otherwise, enter the brief contents directly in the box for review.</i>
                 </div>
             </div>
 
-            <div class="row"><div class="column">
-                <h2>Automated Feedback</h2>-----
-                <div id="ai-feedback" aria-live="polite"></div>
+            <div class="row"><div class="column" style="background-color: lightgray; border: none;">
+                <h2><button type="button" class="submit-button" onclick="content_review()">
+                    Upload contents for review &raquo;
+                </button> | Automated scoring and feedback</h2>
+                <div id="ai_feedback" aria-live="polite" style="border: solid; background-color: azure; padding: 10px;"></div>
             </div></div>
         </section>
     </main>
