@@ -1,137 +1,229 @@
 <head>
-    <title>sponsor verification</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Influencer Content Review System</title>
     <style>
-        h2 {
-            background-color: skyblue;
-        }
-        th {
-            border: solid;
-            background-color: azure;
-        } td {
-            border: blueviolet solid;
-        }
-    </style>
-    <!-- <script type="module" src="./nlp.js"></script> -->
-</head>
-<body>
-    <h2>Influencer content review system</h2>
-    Upload campaign activity history file to render: <input type="file" id="exf" oninput="process_file({})"> <br>
-    Display clickable URL:<input type="checkbox" oninput="process_file({'url_switch': true})">; 
-    Find sender: <textarea id="sender" oninput="process_file({})" rows="1"></textarea>
-    <b id="url_on" style="display: none;"></b>
-    <div id="fileContents">-----</div>
-</body>
-<script>
-    function process_file(mode) {
-        var file = document.getElementById("exf").files[0];
-        const avoid_columns = ["submitted", "approved"];
-        if ("url_switch" in mode) {
-            if (document.getElementById("url_on").style.display == "none") {
-                document.getElementById("url_on").style.display = "block";
-            } else {
-                document.getElementById("url_on").style.display = "none";
-            }
-        }
-        function create_table(text) {
-            if (text[-1] != '\n') {
-                text += '\n';
-            }
-            const col_names = [];
-            const nums_avoid = []
-            let read_body = false;
-            let col_num = 0;
-            const rows = [];
-            let row = [];
-            let entry = "";
-            let paragraph = false;
-            for (const c of text) {
-                if (c == "\"") {
-                    paragraph = !paragraph;
-                    continue;
-                }
-                if (paragraph) {
-                    entry += c;
-                    continue;
-                }
-                if (c == ',' || c == '\n') {
-                    if (! read_body) {
-                        if (! avoid_columns.includes(entry)) 
-                            col_names.push(entry);
-                        else
-                            nums_avoid.push(col_num);
-                    } else if (! nums_avoid.includes(col_num)) {
-                        row.push(entry);
-                    }
-                    entry = "";
-                    if (c == '\n') {
-                        read_body = true;
-                        col_num = 0;
-                        if (row.length > 0)
-                            rows.push(row);
-                        row = [];
-                    } else {
-                        col_num++;
-                    }
-                } else {
-                    entry += c;
-                }
-            }
-            const message_col = col_names.indexOf("message");
-            const sender_col = col_names.indexOf("sender");
-            let res_html = "<table><tr>";
-            col_names.forEach((n, i) => res_html += "<th>"+n+"</th>");
-            res_html += "</tr>\n";
-            rows.forEach((r, i) => {
-                if (document.getElementById("sender").value != "" && r[sender_col].toLowerCase().indexOf(document.getElementById("sender").value.toLowerCase()) < 0)
-                    {return}
-                let row_html = "<tr>";
-                r.forEach((entry, j) => {
-                    let content = "";
-                    let k = 0;
-                    if (j == message_col && entry.includes(":")) {
-                        k = entry.indexOf(':');
-                        let color = "green";
-                        if (entry.substring(0,k).toLowerCase().indexOf("reject") >= 0) {
-                            color = "orange";
-                        }
-                        content = "<b style='color:"+color+"'>"+entry.substring(0, k)+"</b>";
-                    }
-                    if (document.getElementById("url_on").style.display == "none") {
-                        content += entry.substring(k);
-                    } else {
-                        let n_urls = 0;
-                        while (k < entry.length) {
-                            if (entry.substring(k, k+7) == "http://" || entry.substring(k, k+8) == "https://") {
-                                n_urls++;
-                                let s = k;
-                                k += 7;
-                                while (k < entry.length && !" \n\t\r".includes(entry[k])) {
-                                    k++;
-                                }
-                                content += "<a href='"+entry.substring(s,k)+"'>[Reference URL "+n_urls+"]</a>"
-                            } else {
-                                content += entry[k];
-                                k++;
-                            }
-                        }
-                    }
-                    row_html += "<td title='"+col_names[j]+"'>"+content+"</td>";
-                })
-                res_html += row_html+"</tr>\n"
-            })
-            res_html += "</table>";
-            return res_html;
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        if (file) {
-            var reader = new FileReader();
-            reader.readAsText(file, "UTF-8");
-            reader.onload = function (evt) {
-                document.getElementById("fileContents").innerHTML = create_table(evt.target.result);
-            }
-            reader.onerror = function (evt) {
-                document.getElementById("fileContents").innerHTML = "error reading file";
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: azure;
+            padding: 20px;
+        }
+
+        /* Header styles */
+        .main-header {
+            background-color: skyblue;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        /* Navigation styles */
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .nav-button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-button.active {
+            background-color: cornflowerblue;
+            font-size: large;
+            font-weight: 700;
+            color: white;
+        }
+
+        .nav-button:hover {
+            opacity: 0.9;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 95%;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 300px;
+            padding-left: 10px;
+            padding-right: 10px;
+            border: dashed lightgreen;
+        }
+
+        /* Form elements */
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        } textarea {
+            width: 100%;
+            font-size: large;
+            padding: 10px;
+            margin: 10px 0;
+        } select {
+            font-size: large; 
+            width: 50%;
+            border-radius: 5px;
+            background-color: azure;
+        }
+
+        .submit-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            background-color: lightgoldenrodyellow;
+        }
+        th, td {
+            border: solid blueviolet;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .row {
+                flex-direction: column;
             }
         }
-    }
-</script>
+    </style>
+    <script src="data-process.js"></script>
+    <script type="module" src="submit-review.js"></script>
+</head>
+<body>
+    <header class="main-header">
+        <h1>Influencer Content Review System</h1>
+    </header>
+
+    <nav class="nav-buttons">
+        <button class="nav-button active" data-page="0">View Campaign History</button>
+        <button class="nav-button" data-page="1">Automated Content Review</button>
+    </nav>
+
+    <main class="container">
+        <section id="page_0" class="page active">
+            <h2>Render Campaign History Data</h2>
+            <div>
+                <b style="color: blueviolet;">Upload campaign activity file (text-based):</b>
+                <input type="file" id="campaign" aria-label="Campaign history file" accept="text/*" oninput="process_file({})"> <br>
+                <b>More options</b>
+                <div style="border: dashed; padding-left: 10px; background-color: lightgray;">
+                    Display raw URLs: 
+                    <input type="checkbox" id="url_switch" style="width: auto;" oninput="process_file({'url_switch': true})"> <br>
+
+                    Find sender from all entries:
+                    <textarea id="sender" rows="1" aria-label="Sender search" oninput="process_file({})"></textarea>
+                    <div id="url_on" aria-live="polite"></div>
+                </div>
+                <div id="fileContents">-----</div>
+            </div>
+        </section>
+
+        <section id="page_1" class="page" hidden>
+            <div class="row">
+                <div class="column" style="border: solid gray; background-color: lightgray;">
+                    <h2>Prepare Content</h2>
+                    <form id="content-submission">
+                        <label for="brand">Submit content to (brand name):</label>
+                        <input type="text" id="brand" required>
+
+                        <label for="desc">Description/message for sponsor:</label>
+                        <textarea id="desc" rows="5" cols="50">Here's the video topic I made.</textarea>
+
+                        <label for="mtype">Media type:</label>
+                        <select id="mtype">
+                            <option value="text">Text based</option>
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                        </select> <br>
+
+                        <b style="color: blueviolet;">Upload media:</b>
+                        <input type="file" id="media" accept="text/*, image/*,video/*">
+
+                        <b>Upload brief/criteria document:</b>
+                        <input type="file" id="brief_doc" accept="text/*">
+
+                        <button type="button" class="submit-button" onclick="content_review()">
+                            Continue to AI Review &raquo;
+                        </button>
+                    </form>
+                </div>
+
+                <div class="column">
+                    <h2>Content Preview</h2>
+                    <div id="preview" aria-live="polite"></div>
+                </div>
+
+                <div class="column">
+                    <h2>Reference Criteria</h2>
+                    <textarea id="brief" readonly rows="15" cols="70" 
+                        aria-label="Reference criteria section"></textarea>
+                    <i style="color: gray;">Here's the detected section of brief document related to submitter descriptions</i>
+                </div>
+            </div>
+
+            <div class="row"><div class="column">
+                <h2>Automated Feedback</h2>-----
+                <div id="ai-feedback" aria-live="polite"></div>
+            </div></div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2";
+
+        // Page navigation
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const pageId = button.getAttribute('data-page');
+                
+                // Update button styles
+                document.querySelectorAll('.nav-button').forEach(btn => 
+                    btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Show/hide pages
+                document.querySelectorAll('.page').forEach(page => 
+                    page.setAttribute('hidden', 'true'));
+                document.getElementById(`page_${pageId}`).removeAttribute('hidden');
+            });
+        });
+    </script>
+</body>
