@@ -4,7 +4,7 @@
 
 ## Introduction
 
-The main function of the application is to check whether the text/image/video content submitted by media creators match match the requirements of sponsors. Huggingface Transformer.js models including question answering, sentiment analysis, and summarization are utilized. 
+The main function of the application is to check whether the text/image/audio/video content submitted by media creators match match the requirements of sponsors. Huggingface Transformer.js models including question answering, sentiment analysis, and summarization are utilized. 
 
 Another function is designed for easier visualize of creator-sponsor communication history. There's a parser for processing raw csv files and extract contents of interests. Important information will be highlighted, and URLs texts will be rendered to clickable links. Table searching is supported.
 
@@ -17,12 +17,12 @@ For rendering campaign history data, upload text-base file like csv and the tabl
 2. Enter a sender name, and only messages sent by the particular user will be displayed
 
 For sponsor content check, enter sponsor brand name, description, upload content (text/image/video), and provide a brief/criteria document to check with. When everything is uploaded, 
-1. Content preview will be displayed in textbox, image, or video player. If content is text-based, an auto summary will be generated.
+1. Content preview will be displayed in textbox, image, or video player. An auto summary will be generated for the provided content (audio -> script)
 2. Based on submitter description, related section from the provided brief document will be detected and shown in the right hand box (using a question answering model for selection)
 3. General feedback will be created based on sentiment, brand safety, and key selling points (each using a question answering model).
 4. Brief-specific feedback will be created by checking whether requirements are met. (using text2text generation model)
 
-All media types are supported for submission. Text-based files are able to be checked with feedback. Images can create a brief description and segmentation analysis.
+All media types are supported for submission. Text-based files and audio files are able to be checked with feedback; Images can create a brief description and segmentation analysis.
 The whole inference procedure takes about 10 seconds, while some contents can be seen when they're ready.
 
 

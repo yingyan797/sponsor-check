@@ -38,6 +38,13 @@ async function im_analyze(im) {
     out.forEach((lab, i) => {document.getElementById("fb_sum").innerHTML += lab.label + ": (" + lab.score + ")\n"});
 }
 
+async function aud_analyze(aud) {
+    document.getElementById("fb_sum").innerHTML = "[Audio transcription]: ";
+    const listener = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
+    const text = await listener(aud);
+    document.getElementById("fb_sum").innerHTML += text[0].text;
+}
+
 async function general_feedback(content) {
     const brand = document.getElementById("brand").value;
     console.log("general")
@@ -118,7 +125,7 @@ async function content_review() {
     let mtype = document.getElementById("mtype").value;
     if (file) {
         var reader = new FileReader();
-        ["text", "image", "video"].forEach((m, i) => {document.getElementById("s_"+m).style.display = "none"});
+        ["text", "image", "video", "audio"].forEach((m, i) => {document.getElementById("s_"+m).style.display = "none"});
         document.getElementById("s_"+mtype).style.display = "block";
         if (mtype == "text") {
             reader.readAsText(file, "UTF-8");
@@ -136,6 +143,12 @@ async function content_review() {
                 case "image": {
                     document.getElementById("s_image").src = evt.target.result;
                     im_analyze(evt.target.result);
+                    break;
+                }
+                case "audio": {
+                    document.getElementById("s_audio_source").src = evt.target.result;
+                    document.getElementById("s_audio").load();
+                    aud_analyze(evt.target.result);
                     break;
                 }
                 case "video": {

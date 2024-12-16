@@ -92,7 +92,6 @@
             margin: 10px 0;
         } select {
             font-size: large; 
-            width: 50%;
             border-radius: 5px;
             background-color: azure;
         }
@@ -169,13 +168,14 @@
 
                         <label for="mtype">Media type:</label>
                         <select id="mtype">
-                            <option value="text">Text based</option>
-                            <option value="image">Image</option>
-                            <option value="video">Video</option>
+                            <option value="text">Text based (get feedback)</option>
+                            <option value="image">Image (get description)</option>
+                            <option value="audio">Audio (get transcript)</option>
+                            <option value="video">Video (preview only)</option>
                         </select> <br>
 
                         <b style="color: blueviolet;">Upload media:</b>
-                        <input type="file" id="media" accept="text/*, image/*,video/*">
+                        <input type="file" id="media">
 
                         <b>Upload brief/criteria document:</b>
                         <input type="file" id="brief_doc" accept="text/*">
@@ -186,6 +186,7 @@
                     <h2>Content Preview</h2>
                     <textarea id="s_text" style="display: none;" rows='15' cols='70' readonly></textarea>
                     <img id="s_image" style="display: none;" width='97%'>
+                    <audio id="s_audio" style="display: none;" controls><source id="s_audio_source"></audio>
                     <video id='s_video' width='97%' style="display: none;" controls> <source id='s_video_source'> Video preview not supported </video>
                     Auto Summary <br>
                     <textarea id="fb_sum" readonly rows="4" style="background-color: azure;"></textarea> <br>
@@ -231,5 +232,6 @@
                 document.getElementById(`page_${pageId}`).removeAttribute('hidden');
             });
         });
+
     </script>
 </body>
