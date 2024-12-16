@@ -22,7 +22,7 @@ For sponsor content check, enter sponsor brand name, description, upload content
 3. General feedback will be created based on sentiment, brand safety, and key selling points (each using a question answering model).
 4. Brief-specific feedback will be created by checking whether requirements are met. (using text2text generation model)
 
-All media types are supported for submission, but only text-based ones are able to be checked with AI.
+All media types are supported for submission. Text-based files are able to be checked with feedback. Images can create a brief description and segmentation analysis.
 The whole inference procedure takes about 10 seconds, while some contents can be seen when they're ready.
 
 

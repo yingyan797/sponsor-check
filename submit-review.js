@@ -28,13 +28,14 @@ async function step_selection(description, steps) {
 }
 
 async function im_analyze(im) {
-    
+    document.getElementById("fb_sum").innerHTML = "[Image description]: ";
+    const imtext = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
+    const text = await imtext(im);
+    document.getElementById("fb_sum").innerHTML += text[0].generated_text;
     const segment = await pipeline('image-segmentation', 'Xenova/detr-resnet-50-panoptic');
     const out = await segment(im);
-    let desc = "Image components:\n";
-    out.forEach((lab, i) => {desc += lab.label + ": (" + lab.score + ")\n"});
-    document.getElementById("fb_sum").innerHTML = desc;
-
+    document.getElementById("fb_sum").innerHTML += "\n[Image components] \n"
+    out.forEach((lab, i) => {document.getElementById("fb_sum").innerHTML += lab.label + ": (" + lab.score + ")\n"});
 }
 
 async function general_feedback(content) {
