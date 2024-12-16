@@ -117,7 +117,7 @@ async function brief_feedback(content, brief) {
     //     "Based on the given content, what should be done to achieve high quality?",
     //     "Given content: "+content
     // );
-    document.getElementById("fb_doc").innerHTML = ok.answer + " / " + avoid.answer;
+    document.getElementById("fb_doc").innerHTML = "The following should be done: "+ok.answer + " / The following should be avoided" + avoid.answer;
 }
 
 async function content_review() {
@@ -251,6 +251,7 @@ async function analyze_brief(content) {
         if (seg != "") {
             segs.push(seg);
         }
+        document.getElementById("brief").innerText = segs;
         return segs;
     }
 }
