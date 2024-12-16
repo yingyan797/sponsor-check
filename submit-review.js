@@ -27,6 +27,16 @@ async function step_selection(description, steps) {
     return num;
 }
 
+async function im_analyze(im) {
+    
+    const segment = await pipeline('image-segmentation', 'Xenova/detr-resnet-50-panoptic');
+    const out = await segment(im);
+    let desc = "Image components:\n";
+    out.forEach((lab, i) => {desc += lab.label + ": (" + lab.score + ")\n"});
+    document.getElementById("fb_sum").innerHTML = desc;
+
+}
+
 async function general_feedback(content) {
     const brand = document.getElementById("brand").value;
     console.log("general")
@@ -124,6 +134,7 @@ async function content_review() {
                 }
                 case "image": {
                     document.getElementById("s_image").src = evt.target.result;
+                    im_analyze(evt.target.result);
                     break;
                 }
                 case "video": {
