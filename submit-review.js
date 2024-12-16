@@ -81,22 +81,25 @@ async function general_feedback(content) {
         "What are some key selling points of "+brand+" product or features mentioned in the given content?",
         "Given content: "+content
     )
-    document.getElementById("fb_gen").innerHTML += "[Selling points] "+pred2.answer;
+    document.getElementById("fb_gen").innerHTML += "\n[Selling points] "+pred2.answer;
 
 }
 
 async function brief_feedback(content, brief) {
-    const checker = await pipeline('text-generation', 'onnx-community/Qwen2.5-Coder-0.5B-Instruct', {'dtype': 'q4'});
-    const messages = [
-        { "role": "system", "content": "You are a helpful assistant performing content benchmarking tasks. Given a piece of text content, check whether it follows the requirement written in the provided specification." },
-        { "role": "user", "content": "Text content: ```"+content+"```. Specification document: ```"+brief+"```" },
-    ];
-    // const streamer = new TextStreamer(checker.tokenizer, {
-    //     skip_prompt: true,
-    // })
-
-    const feedback = await checker(messages, { max_new_tokens: 200});
-    return feedback[0].generated_text
+    const checker = await pipeline('question-answering', 'Xenova/distilbert-base-uncased-distilled-squad');
+    const ok = await checker(
+        "Based on the given content, what should be done to achieve high quality?",
+        "Given content: "+content
+    );
+    const avoid = await checker(
+        "Based on the given content, what actions should be avoided?",
+        "Given content: "+content
+    );
+    // const  = await checker(
+    //     "Based on the given content, what should be done to achieve high quality?",
+    //     "Given content: "+content
+    // );
+    document.getElementById("fb_doc").innerHTML = ok.answer + " / " + avoid.answer;
 }
 
 async function content_review() {
@@ -116,6 +119,7 @@ async function content_review() {
                 case "text": {
                     document.getElementById("s_text").innerHTML = evt.target.result;
                     general_feedback(evt.target.result);
+                    analyze_brief(evt.target.result);
                     break;
                 }
                 case "image": {
@@ -128,7 +132,6 @@ async function content_review() {
                     break;
                 }
             }
-            analyze_brief()
         }
         reader.onerror = function (evt) {
             alert("error reading file");
@@ -136,7 +139,7 @@ async function content_review() {
     }
 }
 
-async function analyze_brief() {
+async function analyze_brief(content) {
     if (document.getElementById("brief").innerText != "") {
         return
     }
@@ -145,12 +148,12 @@ async function analyze_brief() {
         var reader = new FileReader();
         reader.readAsText(file, "UTF-8");
         reader.onload = async function (evt) {
-            document.getElementById("brief").innerHTML = await process_brief(evt.target.result);
+            const brief = await process_brief(evt.target.result);
+            brief_feedback(content, brief);
         }
         reader.onerror = function (evt) {
             document.getElementById("brief").innerHTML = "error reading reference brief";
         }
-        return document.getElementById("brief").innerHTML;
     }
     async function process_brief(brief) {
         const steps = [];
