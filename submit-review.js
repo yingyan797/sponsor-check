@@ -68,21 +68,21 @@ async function general_feedback(content) {
         }
     }
     document.getElementById("fb_gen").style.backgroundColor = color;
-    let feedback = "[Sentiment] The overall tone of the submitted content is "+stm[0]+" ("+pred1[0].label+"/5) "+stm[1];
-
+    document.getElementById("fb_gen").innerHTML = "[Sentiment] The overall tone of the submitted content is "+stm[0]+" ("+pred1[0].label+"/5) "+stm[1]+"\n";
     const checker2 = await pipeline('question-answering', 'Xenova/distilbert-base-uncased-distilled-squad');
-    const pred2 = await checker2(
-        "Which of the following statements best matches the content: ```"+content+"```?",
-        "1. Key selling points of '"+brand+"' are highlighted in the content; 2. Some advantages of '"+brand+"' are mentioned in the content, but not in much detail; 3. No selling point or advantage can be read or inferred about '"+brand+"'"
-    )
-    feedback += "[Selling points] "+pred2.answer + " can be seen in the submitted content. ";
 
     const pred3 = await checker2(
-        "Does the following text contain harmful content to '"+brand+"' that may be negative for their reputation or dafety? text: ```"+content+"```",
-        "1. No harmful content found regarding '"+brand+"'; 2. Some information might have risk of harm but not obvious; 3. Obvious harmful information is found"
+        "Is there any harmful information in the given content that might be negative to "+brand+" reputation or safety?",
+        "Given content: "+content
     )
-    feedback += "[Brand safety] "+pred3.answer + " can be seen in the submitted content";
-    document.getElementById("fb_gen").innerText = feedback;
+    document.getElementById("fb_gen").innerHTML += "[Brand safety issues] "+pred3.answer;
+
+    const pred2 = await checker2(
+        "What are some key selling points of "+brand+" product or features mentioned in the given content?",
+        "Given content: "+content
+    )
+    document.getElementById("fb_gen").innerHTML += "[Selling points] "+pred2.answer;
+
 }
 
 async function brief_feedback(content, brief) {
