@@ -165,7 +165,7 @@
                         <input type="text" id="brand" required>
 
                         <label for="desc">Description/message for sponsor:</label>
-                        <textarea id="desc" rows="5" cols="50">Here's the video topic I made.</textarea>
+                        <textarea id="desc" rows="5" cols="50">Draft segment script</textarea>
 
                         <label for="mtype">Media type:</label>
                         <select id="mtype">
@@ -187,22 +187,27 @@
                     <textarea id="s_text" style="display: none;" rows='15' cols='70' readonly></textarea>
                     <img id="s_image" style="display: none;" width='97%'>
                     <video id='s_video' width='97%' style="display: none;" controls> <source id='s_video_source'> Video preview not supported </video>
+                    Auto Summary <br>
+                    <textarea id="fb_sum" readonly rows="3" style="background-color: azure;"></textarea> <br>
                 </div>
 
                 <div class="column">
-                    <h2>Reference Criteria</h2>
+                    <h2 style="color: cornflowerblue;">Criteria section of interest</h2>
                     <textarea id="brief" rows="15" cols="70" 
-                        aria-label="Reference criteria section"></textarea>
+                        aria-label="Reference criteria section" style="background-color: azure;"></textarea>
                     <i style="color: gray;">
                     Based on submitter descriptions, releted sections from the uploaded brief document will appear here. Otherwise, enter the brief contents directly in the box for review.</i>
                 </div>
             </div>
 
             <div class="row"><div class="column" style="background-color: lightgray; border: none;">
-                <h2><button type="button" class="submit-button" onclick="content_review()">
+                <h2 style="color: cornflowerblue;"><button type="button" class="submit-button" onclick="content_review()">
                     Upload contents for review &raquo;
                 </button> | Automated scoring and feedback</h2>
-                <div id="ai_feedback" aria-live="polite" style="border: solid; background-color: azure; padding: 10px;"></div>
+                General feedback: Is the submitted content brand safe and highlighting the brand product's selling point?
+                <textarea id="fb_gen" readonly rows="5"></textarea> <br>
+                Specific feedback according to the provided brief document
+                <textarea id="fb_doc" readonly rows="5"></textarea> 
             </div></div>
         </section>
     </main>

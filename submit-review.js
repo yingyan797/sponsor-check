@@ -1,28 +1,102 @@
 import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2"
 
 async function step_selection(description, steps) {
-    const select = await pipeline("zero-shot-classification", "Xenova/mobilebert-uncased-mnli");
-    const preds = await select(description, steps);
-    const top_label = preds["labels"][0]
-    // const top_score = preds["scores"][0];
-    let i = 1;
-    while (!isNaN(top_label.substring(0, i))) {
-        i += 1;
+    const selector = await pipeline('question-answering', 'Xenova/distilbert-base-uncased-distilled-squad');
+    const pred = await selector(
+        "Which of the following steps best match the description ```"+description+"```?",
+        String(steps)
+    )
+    
+    const answer = pred["answer"];
+    let i = 0;
+    let num = "";
+    while (i < answer.length) {
+        if (!isNaN(parseInt(answer[i]))) {
+            num += answer[i];
+        } else if (num != "") {
+            break;
+        }
+        i++;
     }
-    return parseInt(top_label.substring(0, i-1));
+    if (num == "") {
+        num = 0;
+    } else {
+        num = parseInt(num);
+    }
+    console.log("step selection "+num)
+    return num;
 }
 
-async function text_feedback(content, brief) {
-    const checker = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-783M');
-    // const feedback = await checker(
-    //     "Based on the given specifications document, provide some feedback for the submitted contents. specification document as follows: '"+brief+"'; submitted contents as follows: '"+content+"'",
-    //     {'max_new_tokens': 100}
-    // )
-    const feedback = await checker(
-        "Provide some reasons why Mongolia is colder than Japan",
-        {'max_new_tokens': 100}
+async function general_feedback(content) {
+    const brand = document.getElementById("brand").value;
+    console.log("general")
+    const reader = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6');
+    // const brand = document.getElementById("brand").value;
+    const out = await reader(content, {max_token: 200});
+    console.log(out)
+    document.getElementById("fb_sum").innerText = out[0].summary_text;
+
+    const checker1 = await pipeline('sentiment-analysis', 'Xenova/bert-base-multilingual-uncased-sentiment');
+    const pred1 = await checker1(content);
+    let color = "";
+    let stm = "";
+    switch (pred1[0].label[0]) {
+        case '1': {
+            color = "salmon";
+            stm = ["Very negative", "Seems you feel unplesant about '"+brand+"' product/features. Reconsider whether creating the content or not."]
+            break;
+        }
+        case '2': {
+            color = "lightsalmon";
+            stm = ["Negative", "Make sure not to mention too much disadvantage of '"+brand+"' product/features"]
+            break;
+        }
+        case '3': {
+            color = "azure";
+            stm = ["Neutral", "Adjust your attitude toward '"+brand+"' more positive if you're satisfied with their product/features"]
+            break;
+        }
+        case '4': {
+            color = "greenyellow";
+            stm = ["Potitive",  "Good, '"+brand+"' would like positive voice about their product/features."]
+            break;
+        }
+        case '5': {
+            color = "lightgreen";
+            stm = ["Very positive", "Wonderful, '"+brand+"' would appreciate your satisfaction about their product/features. "] 
+            break;
+        }
+    }
+    document.getElementById("fb_gen").style.backgroundColor = color;
+    let feedback = "[Sentiment] The overall tone of the submitted content is "+stm[0]+" ("+pred1[0].label+"/5) "+stm[1];
+
+    const checker2 = await pipeline('question-answering', 'Xenova/distilbert-base-uncased-distilled-squad');
+    const pred2 = await checker2(
+        "Which of the following statements best matches the content: ```"+content+"```?",
+        "1. Key selling points of '"+brand+"' are highlighted in the content; 2. Some advantages of '"+brand+"' are mentioned in the content, but not in much detail; 3. No selling point or advantage can be read or inferred about '"+brand+"'"
     )
-    return feedback[0]["generated_text"];
+    feedback += "[Selling points] "+pred2.answer + " can be seen in the submitted content. ";
+
+    const pred3 = await checker2(
+        "Does the following text contain harmful content to '"+brand+"' that may be negative for their reputation or dafety? text: ```"+content+"```",
+        "1. No harmful content found regarding '"+brand+"'; 2. Some information might have risk of harm but not obvious; 3. Obvious harmful information is found"
+    )
+    feedback += "[Brand safety] "+pred3.answer + " can be seen in the submitted content";
+    document.getElementById("fb_gen").innerText = feedback;
+}
+
+async function brief_feedback(content, brief) {
+    const checker = await pipeline('text-generation', 'onnx-community/Qwen2.5-Coder-0.5B-Instruct', {'dtype': 'q4'});
+    const messages = [
+        { "role": "system", "content": "You are a helpful assistant performing content benchmarking tasks. Given a piece of text content, check whether it follows the requirement written in the provided specification." },
+        { "role": "user", "content": "Text content: ```"+content+"```. Specification document: ```"+brief+"```" },
+    ];
+    // const streamer = new TextStreamer(checker.tokenizer, {
+    //     skip_prompt: true,
+    // })
+
+    const feedback = await checker(messages, { max_new_tokens: 200});
+    return feedback[0].generated_text
 }
 
 async function content_review() {
@@ -41,6 +115,7 @@ async function content_review() {
             switch (mtype) {
                 case "text": {
                     document.getElementById("s_text").innerHTML = evt.target.result;
+                    general_feedback(evt.target.result);
                     break;
                 }
                 case "image": {
@@ -53,20 +128,18 @@ async function content_review() {
                     break;
                 }
             }
+            analyze_brief()
         }
         reader.onerror = function (evt) {
             alert("error reading file");
         }
     }
-    let brief = document.getElementById("brief").value;
-    if (brief == "") {
-        brief = await parse_brief();
-    }
-    const feedback = await text_feedback(document.getElementById("s_text").innerText, brief);
-    document.getElementById("ai_feedback").innerHTML = feedback;
 }
 
-async function parse_brief() {
+async function analyze_brief() {
+    if (document.getElementById("brief").innerText != "") {
+        return
+    }
     var file = document.getElementById("brief_doc").files[0];
     if (file) {
         var reader = new FileReader();
@@ -124,9 +197,34 @@ async function parse_brief() {
             }
         }
 
-        return brief.substring(body, i);
+        let j = body;
+        const segs = [];
+        let seg = "";
+        let start = false;
+        while (j < i) {
+            if (brief.substring(j, j+7) == "<aside>") {
+                j += 7;
+                start = true;
+                continue
+            } else if (brief.substring(j, j+8) == "</aside>") {
+                if (seg) {
+                    segs.push(seg);
+                }
+                j += 8;
+                seg = "";
+                start = false;
+                continue;
+            }
+            if (start) {
+                seg += brief[j];
+            }
+            j += 1;
+        }
+        if (seg != "") {
+            segs.push(seg);
+        }
+        return segs;
     }
-    return "";
 }
 
 window.content_review = content_review;

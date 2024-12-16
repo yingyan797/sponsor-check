@@ -1,0 +1,81 @@
+<head>
+    <title>sponsor verification</title>
+    <style>
+        h2 {
+            background-color: skyblue;
+        }
+        th {
+            border: solid;
+            background-color: lightgreen;
+        } td {
+            border: blueviolet solid;
+        }
+        button {
+            font-size: large;
+            padding-bottom: 20px;
+        } textarea {
+            font-size: large;
+        }
+        .column {
+            float: left;
+            width: 32%;
+        }
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+    <script type="module">import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2";</script>
+    <script src="./data-process.js"></script>
+    <script type="module" src="./submit-review.js"></script>
+</head>
+<body style="background-color: lightgoldenrodyellow;">
+    <h2>Influencer content review system</h2>
+    <button onclick="page(0)" id="use_0" style="background-color: azure;">View campaign history</button>
+    <button onclick="page(1)" id="use_1" style="background-color: lightgreen;">Automated content review</button>
+    <div id="page_0" style="display: block; background-color: azure;">
+        Upload campaign activity history file to view: <input type="file" id="campaign" oninput="process_file({})"> <br>
+        Display clickable URL:<input type="checkbox" oninput="process_file({'url_switch': true})">; 
+        Find sender: <textarea id="sender" oninput="process_file({})" rows="1"></textarea>
+        <b id="url_on" style="display: none;"></b>
+        <div id="fileContents">-----</div></div>
+    <div id="page_1" style="display: none; background-color: azure;">
+        <div class="row">
+            <div class="column"> <h3>Prepare content for submission</h3>
+            Submit content to: <input type="text" id="brand"> (brand name)<br>
+            Message/description to sponsor <br> <textarea id="desc" rows="8" cols="50">Here's the video topic I made.</textarea><br>
+            Media type: <select id="mtype">
+                <option value="text">Text based</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option></select><br>
+            Upload media: <input type="file" id="media"> <br>
+            Upload brief/criteria related document: <input type="file" id="brief_doc"> <br>
+            <button onclick="content_review()">Continue to AI review >></button>
+            </div><div class="column">
+                <h3>Content preview</h3>
+                <div id="preview"></div>
+            </div><div class="column">
+                <h3>Reference criteria section</h3>
+                <textarea id="brief" readonly rows="15" cols="70"></textarea>
+            </div>
+        </div><div class="row" style="background-color: azure;">
+            <h3>Automated feedback based on the provided criteria</h3>
+        </div>
+    </div>
+</body>
+<script>
+    function page(mode) {
+        document.getElementById("use_"+mode).style.backgroundColor = "azure";
+        document.getElementById("page_"+mode).style.display = "block";
+        for (i = 0; i < 2; i++) {
+            if (i != mode) {
+                document.getElementById("use_"+i).style.backgroundColor = "lightgreen";
+                document.getElementById("page_"+i).style.display = "none";
+            }
+        }     
+    }
+    
+</script>
+
+
