@@ -32,8 +32,8 @@ async function im_analyze(im) {
     const imtext = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
     const text = await imtext(im);
     document.getElementById("fb_sum").innerHTML += text[0].generated_text;
-    const segment = await pipeline('image-segmentation', 'Xenova/detr-resnet-50-panoptic');
-    const out = await segment(im);
+    const detect = await pipeline('object-detection', 'Xenova/detr-resnet-50');
+    const out = await detect(im, {threshold: 0.9});
     document.getElementById("fb_sum").innerHTML += "\n[Image components] \n"
     out.forEach((lab, i) => {document.getElementById("fb_sum").innerHTML += lab.label + ": (" + lab.score + ")\n"});
 }
@@ -43,6 +43,7 @@ async function aud_analyze(aud) {
     const listener = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
     const text = await listener(aud);
     document.getElementById("fb_sum").innerHTML += text[0].text;
+    analyze_brief(text[0].text);
 }
 
 async function general_feedback(content) {
@@ -106,18 +107,22 @@ async function general_feedback(content) {
 async function brief_feedback(content, brief) {
     const checker = await pipeline('question-answering', 'Xenova/distilbert-base-uncased-distilled-squad');
     const ok = await checker(
-        "Based on the given content, what should be done to achieve high quality?",
-        "Given content: "+content
+        "Based on the given content, what are some bullet points to achieve high quality?",
+        "Given content: "+brief
     );
     const avoid = await checker(
-        "Based on the given content, what actions should be avoided?",
-        "Given content: "+content
+        "Based on the given content, what are the bullet points containing actions be avoided?",
+        "Given content: "+brief
     );
-    // const  = await checker(
-    //     "Based on the given content, what should be done to achieve high quality?",
-    //     "Given content: "+content
-    // );
-    document.getElementById("fb_doc").innerHTML = "The following should be done: "+ok.answer + " / The following should be avoided" + avoid.answer;
+    const p_check = await checker(
+        "Based on the given guidance, what aspect is missing from the content ```"+content+"```",
+        "Given guuidance: "+ok.anser
+    );
+    const n_check = await checker(
+        "Based on the given instructions, what aspect should not be appearing in the content ```"+content+"```",
+        "Given instructions: "+avoid.anser
+    );
+    document.getElementById("fb_doc").innerHTML = "The following should be done (with more extent) to improve quality: "+p_check.answer + "\nThe following should be avoided: " + n_check.answer;
 }
 
 async function content_review() {

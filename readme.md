@@ -22,12 +22,16 @@ For sponsor content check, enter sponsor brand name, description, upload content
 3. General feedback will be created based on sentiment, brand safety, and key selling points (each using a question answering model).
 4. Brief-specific feedback will be created by checking whether requirements are met. (using text2text generation model)
 
+Note that the system automatically determines which part of the brief document is relavant to the submission, based on "Description" (e.g., create a video topic, write a design board, shoot a draft video, etc.).
+
 All media types are supported for submission. Text-based files and audio files are able to be checked with feedback; Images can create a brief description and segmentation analysis.
-The whole inference procedure takes about 10 seconds, while some contents can be seen when they're ready.
+The whole inference procedure takes about 10 seconds, while some contents can be seen earlier when they're ready.
 
 
 ## Challenges, developmebt process, and future improvements
 One challenge of writing the application is the integration of Transformer.js models in the overall workflow. Problems like synchronization always gave me a hard time (though eventually resolved). Sometimes the model is not able to receive any input because file loading happening afterwards, creating seemingly reasonable AI response but based on wrong input. Also, response produced by AI is not received by the web page (giving Promise<Any>) due to missing "await" or "then".
 
 Some issues remain, due to the limited capability of Tranformer models. It might not provide satisfying or coherent responses.
+
+For improvements, find a better way to extract (exactly) the key components from brief documents regarding what should be done and what should be avoided, and use a more suitable AI model to perform side-by-side analysis on their content. Also, features extracted from image and video could be used to perform review.
 
